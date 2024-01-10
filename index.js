@@ -21,6 +21,7 @@ app.use(express.json());
 //Rutas
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/pokemon", require("./routes/pokemon"));
+app.use("/api/collection", require("./routes/collection"));
 
 app.get('*', (req, res) => {
 	res.sendFile('main.html', {root: 'public'});

@@ -162,6 +162,24 @@ const getType = async (req, res = response) => {
 	}
 };
 
+const getSpecies = async (req, res = response) => {
+	try {
+		const { id } = req.params;
+
+		const resp = await PokemonSpecies.findOne({id}).exec();
+		const newPokemonSpecies = new PokemonSpecies(resp);
+		res.status(200).json(newPokemonSpecies);
+
+	} catch (error) {
+		res.status(500).json({
+			ok: false,
+			msg: "Error con las especies"
+		})
+	}
+}
+
+
+
 const deleteAll = async (req, res = response) => {
 	try {
 		Pokemon.deleteAll();
@@ -181,6 +199,7 @@ module.exports = {
 	getPokemonById,
 	getPokemonByName,
 	getType,
+	getSpecies,
 	getPokemonWithPagination,
 	deleteAll,
 	retrievePokemonSpeciesData,
