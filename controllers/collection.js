@@ -4,7 +4,8 @@ const getCollectionById = async (req, res = response) => {
 	try {
 		const { id } = req.params;
 
-		const resp = await Collection.findOne({ id }).exec();
+		const resp = await Collection.findOne({ user_id: id }).exec();
+
 		const newCollection = new Collection(resp);
 		res.status(200).json(newCollection);
 	} catch (error) {
@@ -18,16 +19,16 @@ const getCollectionById = async (req, res = response) => {
 const addItemCollection = async (req, res = response) => {
 	try {
 		const { body } = req;
-		const { id } = body;
+		const { user_id, id } = body;
 
-		const respFind = await Collection.findOne({ id }).exec();
+		const respFind = await Collection.findOne({ user_id }).exec();
 		if (respFind) {
-			let doc = await Collection.findOneAndUpdate({ id: id }, body);
+			await Collection.findOneAndUpdate({ user_id }, body).exec();
 			res.status(200).json({
 				ok: true,
 				msg: "Actualizado correctamente",
 			});
-            return;
+			return;
 		}
 
 		let itemCollection = new Collection(body);

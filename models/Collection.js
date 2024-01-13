@@ -1,8 +1,8 @@
 const { Schema, model } = require("mongoose");
 
 const CollectionSchema = Schema({
-	id: String,
-    user_id: Number,
+	id: Number,
+    user_id: String,
 	collection_items: [
 		{
 			game_indices: [
@@ -22,10 +22,12 @@ const CollectionSchema = Schema({
 				front_default: String,
 				front_shiny: String,
 			},
-			type: {
-                name: String,
-                url: String
-            },
+			types: [
+				{
+					name: String,
+					url: String
+				}
+			],
 			weight: Number,
             isShiny: Boolean,
             date_caught: {type: Date, default: Date.now}
