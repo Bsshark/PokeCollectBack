@@ -3,6 +3,8 @@ const Pokemon = require("../models/Pokemon");
 const PokemonSpecies = require("../models/Species");
 const PokemonTypes = require("../models/Type");
 const axios = require("axios");
+const { head } = require("../routes/pokemon");
+const { header } = require("express-validator");
 
 const url = "https://pokeapi.co/api/v2/pokemon/";
 const urlSpecies = "https://pokeapi.co/api/v2/pokemon-species/";
@@ -23,7 +25,7 @@ const retrievePokemonData = async (req, res = response) => {
 				result.data.name =
 					result.data.name.charAt(0).toUpperCase() + result.data.name.slice(1);
 				const newPokemon = new Pokemon(result.data);
-                newPokemon.types = [];
+				newPokemon.types = [];
 				result.data.types.forEach((type) => {
 					newPokemon.types.push(type.type);
 				});
@@ -112,14 +114,19 @@ const getPokemonById = async (req, res = response) => {
 const getPokemonWithPagination = async (req, res = response) => {
 	try {
 		const { headers } = req;
-		const { limit, from } = headers;
+		const { limit, from, typefilter } = headers;
 
-		const resp = await Pokemon.find({ id: { $gt: from - 1 } })
-			.sort({ id: "ascending" })
-			.limit(limit)
-			.exec();
+		getTypeInEnglish(typefilter).then(async (result) => {
+			var filter = {};
+			if (typefilter) filter = { ...filter, "types.name": result.name };
+			const resp = await Pokemon.find(filter)
+				.sort({ id: "ascending" })
+				.skip(from)
+				.limit(limit)
+				.exec();
 
-		res.status(200).json(resp);
+			res.status(200).json(resp);
+		});
 	} catch (error) {
 		res.status(500).json({
 			ok: false,
@@ -130,15 +137,20 @@ const getPokemonWithPagination = async (req, res = response) => {
 
 const getPokemonByName = async (req, res = response) => {
 	try {
-		const { params } = req;
+		const { params, headers } = req;
+		const { typefilter } = headers;
 
-		const resp = await Pokemon.find({
-			name: new RegExp(params.name, "i"),
-		})
-			.sort({ id: "ascending" })
-			.exec();
+		getTypeInEnglish(typefilter).then(async (result) => {
+			var filter = {};
+			if (typefilter) filter = { ...filter, "types.name": result.name };
+			if (params.name)
+				filter = { ...filter, name: new RegExp(params.name, "i") };
 
-		res.status(200).json(resp);
+			console.log(filter);
+			const resp = await Pokemon.find(filter).sort({ id: "ascending" }).exec();
+
+			res.status(200).json(resp);
+		});
 	} catch (error) {
 		res.status(500).json({
 			ok: false,
@@ -146,6 +158,10 @@ const getPokemonByName = async (req, res = response) => {
 		});
 	}
 };
+
+const test = (value) => {
+	return value * 2;
+}
 
 const getType = async (req, res = response) => {
 	try {
@@ -166,19 +182,48 @@ const getSpecies = async (req, res = response) => {
 	try {
 		const { id } = req.params;
 
-		const resp = await PokemonSpecies.findOne({id}).exec();
+		const resp = await PokemonSpecies.findOne({ id }).exec();
 		const newPokemonSpecies = new PokemonSpecies(resp);
 		res.status(200).json(newPokemonSpecies);
-
 	} catch (error) {
 		res.status(500).json({
 			ok: false,
-			msg: "Error con las especies"
-		})
+			msg: "Error con las especies",
+		});
 	}
-}
+};
 
+const getTypeInEnglish = async (name) => {
+	try {
+		const resp = await PokemonTypes.findOne({
+			"names.name": name ? titleCase(name) : {},
+		}).exec();
+		return resp;
+	} catch (error) {
+		console.log(error);
+	}
+};
 
+const titleCase = (str) => {
+	return str
+		.toLowerCase()
+		.split(" ")
+		.map(function (word) {
+			return word.replace(word[0], word[0].toUpperCase());
+		})
+		.join(" ");
+};
+
+const getTypeInLanguage = async (lang, name) => {
+	try {
+		const resp = await PokemonTypes.findOne({ name }).exec();
+		const allNames = resp.names;
+		console.log(allNames.find((name) => name.language.name == "es"));
+		return allNames.find((name) => name.language.name == lang);
+	} catch (error) {
+		console.log(error);
+	}
+};
 
 const deleteAll = async (req, res = response) => {
 	try {
