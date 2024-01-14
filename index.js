@@ -24,7 +24,7 @@ app.use("/api/pokemon", require("./routes/pokemon"));
 app.use("/api/collection", require("./routes/collection"));
 
 app.get('*', (req, res) => {
-	res.sendFile('main.html', {root: 'public'});
+	res.sendFile('index.html', {root: 'public'});
   });
 
 //Escuchar peticiones
