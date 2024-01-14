@@ -24,8 +24,8 @@ app.use("/api/pokemon", require("./routes/pokemon"));
 app.use("/api/collection", require("./routes/collection"));
 
 app.get('*', (req, res) => {
-	res.sendFile('index.html', {root: 'public'});
-  });
+  res.sendFile(__dirname + '/public/index.html');
+})
 
 //Escuchar peticiones
 app.listen(process.env.PORT || 3000, () => {
